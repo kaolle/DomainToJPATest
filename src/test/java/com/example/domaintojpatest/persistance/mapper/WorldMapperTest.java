@@ -105,23 +105,29 @@ class WorldMapperTest {
                 .findFirst().orElseThrow();
     }
 
-    private WorldEntity buildFullWorldEntity() {
+    private WorldEntity buildFullWorldEntity() throws Exception {
         WorldEntity world = new WorldEntity();
-        world.setId(1L);
+        setId(world, 1L);
 
         ContinentEntity continent = new ContinentEntity();
-        continent.setId(1L);
+        setId(continent, 1L);
         continent.setName("Europe");
         continent.setWorld(world);
 
         CountryEntity country = new CountryEntity();
-        country.setId(1L);
+        setId(country, 1L);
         country.setName("Germany");
         country.setContinent(continent);
 
         continent.setCountries(new ArrayList<>(List.of(country)));
         world.setContinents(new ArrayList<>(List.of(continent)));
         return world;
+    }
+
+    private static void setId(Object entity, Long id) throws Exception {
+        Field idField = entity.getClass().getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(entity, id);
     }
 
     private World buildFullWorldDomain() {
