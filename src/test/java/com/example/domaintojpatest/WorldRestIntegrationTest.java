@@ -7,7 +7,6 @@ import com.example.domaintojpatest.web.dto.CreateContinentRequest;
 import com.example.domaintojpatest.web.dto.CreateCountryRequest;
 import com.example.domaintojpatest.web.dto.CreateWorldRequest;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
@@ -45,16 +44,16 @@ class WorldRestIntegrationTest {
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         World created = createResponse.getBody();
         assertThat(created).isNotNull();
-        assertThat(created.id()).isNotNull();
-        assertThat(created.continents()).hasSize(2);
+        assertThat(created.getId()).isNotNull();
+        assertThat(created.getContinents()).hasSize(2);
 
-        ResponseEntity<World> getResponse = restTemplate.getForEntity(url("/worlds/{id}"), World.class, created.id());
+        ResponseEntity<World> getResponse = restTemplate.getForEntity(url("/worlds/{id}"), World.class, created.getId());
 
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         World fetched = getResponse.getBody();
         assertThat(fetched).isNotNull();
-        assertThat(fetched.id()).isEqualTo(created.id());
-        assertThat(fetched.continents()).extracting(Continent::name)
+        assertThat(fetched.getId()).isEqualTo(created.getId());
+        assertThat(fetched.getContinents()).extracting(Continent::getName)
                 .containsExactlyInAnyOrder("Europe", "Asia");
     }
 
@@ -74,14 +73,14 @@ class WorldRestIntegrationTest {
                 HttpMethod.PUT,
                 new HttpEntity<>(updateRequest),
                 Continent.class,
-                world.id(), europe.id()
+                world.getId(), europe.getId()
         );
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         Continent updated = updateResponse.getBody();
         assertThat(updated).isNotNull();
-        assertThat(updated.countries()).hasSize(3);
-        assertThat(updated.countries()).extracting(Country::name)
+        assertThat(updated.getCountries()).hasSize(3);
+        assertThat(updated.getCountries()).extracting(Country::getName)
                 .containsExactlyInAnyOrder("Germany", "France", "Spain");
     }
 
@@ -94,13 +93,13 @@ class WorldRestIntegrationTest {
                 url("/worlds/{worldId}/continents/{continentId}/countries"),
                 new CreateCountryRequest("Spain"),
                 World.class,
-                world.id(), europe.id()
+                world.getId(), europe.getId()
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Continent updatedEurope = continentByName(response.getBody(), "Europe");
-        assertThat(updatedEurope.countries()).hasSize(3);
-        assertThat(updatedEurope.countries()).extracting(Country::name)
+        assertThat(updatedEurope.getCountries()).hasSize(3);
+        assertThat(updatedEurope.getCountries()).extracting(Country::getName)
                 .contains("Germany", "France", "Spain");
     }
 
@@ -108,8 +107,8 @@ class WorldRestIntegrationTest {
     void removeCountryFromContinent() {
         World world = createWorld();
         Continent europe = continentByName(world, "Europe");
-        Country germany = europe.countries().stream()
-                .filter(c -> c.name().equals("Germany"))
+        Country germany = europe.getCountries().stream()
+                .filter(c -> c.getName().equals("Germany"))
                 .findFirst().orElseThrow();
 
         ResponseEntity<World> response = restTemplate.exchange(
@@ -117,13 +116,13 @@ class WorldRestIntegrationTest {
                 HttpMethod.DELETE,
                 HttpEntity.EMPTY,
                 World.class,
-                world.id(), europe.id(), germany.id()
+                world.getId(), europe.getId(), germany.getId()
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Continent updatedEurope = continentByName(response.getBody(), "Europe");
-        assertThat(updatedEurope.countries()).hasSize(1);
-        assertThat(updatedEurope.countries()).extracting(Country::name).containsOnly("France");
+        assertThat(updatedEurope.getCountries()).hasSize(1);
+        assertThat(updatedEurope.getCountries()).extracting(Country::getName).containsOnly("France");
     }
 
     private World createWorld() {
@@ -140,8 +139,8 @@ class WorldRestIntegrationTest {
     }
 
     private Continent continentByName(World world, String name) {
-        return world.continents().stream()
-                .filter(c -> c.name().equals(name))
+        return world.getContinents().stream()
+                .filter(c -> c.getName().equals(name))
                 .findFirst().orElseThrow();
     }
 

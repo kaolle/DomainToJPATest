@@ -1,9 +1,17 @@
 package com.example.domaintojpatest.application.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Getter
 @Builder
-public record World(Long id, List<Continent> continents) {
+@NoArgsConstructor
+@AllArgsConstructor
+public class World {
+    private Long id;
+    private List<Continent> continents;
 }

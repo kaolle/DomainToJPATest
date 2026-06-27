@@ -9,7 +9,6 @@ import com.example.domaintojpatest.persistance.entity.WorldEntity;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,7 +27,7 @@ class WorldMapperTest {
 
         World world = mapper.toDomain(worldEntity);
 
-        assertNoNullRecordFields(world, Set.of());
+        assertNoNullFields(world, Set.of(), new HashSet<>());
     }
 
     @Test
@@ -37,7 +36,7 @@ class WorldMapperTest {
 
         WorldEntity entity = mapper.toEntity(world);
 
-        assertNoNullEntityFields(entity, Set.of("id"), new HashSet<>());
+        assertNoNullFields(entity, Set.of("id"), new HashSet<>());
     }
 
     @Test
@@ -75,7 +74,7 @@ class WorldMapperTest {
         assertThat(asia.getWorld()).isSameAs(existingEntity);
         assertThat(asia.getCountries().get(0).getContinent()).isSameAs(asia);
 
-        assertNoNullEntityFields(existingEntity, Set.of("id"), new HashSet<>());
+        assertNoNullFields(existingEntity, Set.of("id"), new HashSet<>());
     }
 
     @Test
@@ -96,7 +95,7 @@ class WorldMapperTest {
         assertThat(existingContinent.getCountries().get(0).getName()).isEqualTo("France");
         assertThat(existingContinent.getCountries().get(0).getContinent()).isSameAs(existingContinent);
 
-        assertNoNullEntityFields(existingContinent, Set.of("id"), new HashSet<>());
+        assertNoNullFields(existingContinent, Set.of("id"), new HashSet<>());
     }
 
     private ContinentEntity continentById(WorldEntity world, Long id) {
@@ -124,12 +123,6 @@ class WorldMapperTest {
         return world;
     }
 
-    private static void setId(Object entity, Long id) throws Exception {
-        Field idField = entity.getClass().getDeclaredField("id");
-        idField.setAccessible(true);
-        idField.set(entity, id);
-    }
-
     private World buildFullWorldDomain() {
         return World.builder()
                 .continents(List.of(
@@ -143,56 +136,37 @@ class WorldMapperTest {
                 .build();
     }
 
-    // Recursively checks all record components are non-null (and strings non-blank, lists non-empty)
-    private void assertNoNullRecordFields(Record record, Set<String> skip) throws Exception {
-        for (RecordComponent comp : record.getClass().getRecordComponents()) {
-            if (skip.contains(comp.getName())) continue;
-            Object value = comp.getAccessor().invoke(record);
+    // Recursively checks all fields are non-null. Uses visited set per path to stop at back-references.
+    private void assertNoNullFields(Object obj, Set<String> skip, Set<Class<?>> visited) throws Exception {
+        if (obj == null || visited.contains(obj.getClass())) return;
+        visited.add(obj.getClass());
+
+        for (Field field : obj.getClass().getDeclaredFields()) {
+            if (skip.contains(field.getName())) continue;
+            field.setAccessible(true);
+            Object value = field.get(obj);
             assertThat(value)
-                    .as("%s.%s must not be null", record.getClass().getSimpleName(), comp.getName())
+                    .as("%s.%s must not be null", obj.getClass().getSimpleName(), field.getName())
                     .isNotNull();
             if (value instanceof String s) {
                 assertThat(s)
-                        .as("%s.%s must not be blank", record.getClass().getSimpleName(), comp.getName())
+                        .as("%s.%s must not be blank", obj.getClass().getSimpleName(), field.getName())
                         .isNotBlank();
             }
             if (value instanceof Collection<?> coll) {
                 assertThat(coll)
-                        .as("%s.%s must not be empty", record.getClass().getSimpleName(), comp.getName())
+                        .as("%s.%s must not be empty", obj.getClass().getSimpleName(), field.getName())
                         .isNotEmpty();
                 for (Object item : coll) {
-                    if (item instanceof Record r) assertNoNullRecordFields(r, skip);
+                    assertNoNullFields(item, skip, new HashSet<>(visited));
                 }
             }
         }
     }
 
-    // Recursively checks entity fields non-null. Uses visited set per path to stop at back-references.
-    private void assertNoNullEntityFields(Object entity, Set<String> skip, Set<Class<?>> visited) throws Exception {
-        if (entity == null || visited.contains(entity.getClass())) return;
-        visited.add(entity.getClass());
-
-        for (Field field : entity.getClass().getDeclaredFields()) {
-            if (skip.contains(field.getName())) continue;
-            field.setAccessible(true);
-            Object value = field.get(entity);
-            assertThat(value)
-                    .as("%s.%s must not be null", entity.getClass().getSimpleName(), field.getName())
-                    .isNotNull();
-            if (value instanceof String s) {
-                assertThat(s)
-                        .as("%s.%s must not be blank", entity.getClass().getSimpleName(), field.getName())
-                        .isNotBlank();
-            }
-            if (value instanceof Collection<?> coll) {
-                assertThat(coll)
-                        .as("%s.%s must not be empty", entity.getClass().getSimpleName(), field.getName())
-                        .isNotEmpty();
-                for (Object item : coll) {
-                    // Fresh visited copy per item so sibling entities of the same type are still checked
-                    assertNoNullEntityFields(item, skip, new HashSet<>(visited));
-                }
-            }
-        }
+    private static void setId(Object entity, Long id) throws Exception {
+        Field idField = entity.getClass().getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(entity, id);
     }
 }

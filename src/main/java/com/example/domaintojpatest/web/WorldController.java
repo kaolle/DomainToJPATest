@@ -78,17 +78,17 @@ class WorldController {
         World world = worldRepository.findById(worldId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        List<Continent> updatedContinents = world.continents().stream()
-                .map(c -> c.id().equals(continentId)
+        List<Continent> updatedContinents = world.getContinents().stream()
+                .map(c -> c.getId().equals(continentId)
                         ? Continent.builder()
-                                .id(c.id())
-                                .name(c.name())
-                                .countries(append(c.countries(), Country.builder().name(request.name()).build()))
+                                .id(c.getId())
+                                .name(c.getName())
+                                .countries(append(c.getCountries(), Country.builder().name(request.name()).build()))
                                 .build()
                         : c)
                 .toList();
 
-        return worldRepository.save(World.builder().id(world.id()).continents(updatedContinents).build());
+        return worldRepository.save(World.builder().id(world.getId()).continents(updatedContinents).build());
     }
 
     @DeleteMapping("/{worldId}/continents/{continentId}/countries/{countryId}")
@@ -99,19 +99,19 @@ class WorldController {
         World world = worldRepository.findById(worldId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        List<Continent> updatedContinents = world.continents().stream()
-                .map(c -> c.id().equals(continentId)
+        List<Continent> updatedContinents = world.getContinents().stream()
+                .map(c -> c.getId().equals(continentId)
                         ? Continent.builder()
-                                .id(c.id())
-                                .name(c.name())
-                                .countries(c.countries().stream()
-                                        .filter(co -> !co.id().equals(countryId))
+                                .id(c.getId())
+                                .name(c.getName())
+                                .countries(c.getCountries().stream()
+                                        .filter(co -> !co.getId().equals(countryId))
                                         .toList())
                                 .build()
                         : c)
                 .toList();
 
-        return worldRepository.save(World.builder().id(world.id()).continents(updatedContinents).build());
+        return worldRepository.save(World.builder().id(world.getId()).continents(updatedContinents).build());
     }
 
     private static <T> List<T> append(List<T> list, T element) {

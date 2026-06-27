@@ -1,7 +1,15 @@
 package com.example.domaintojpatest.application.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Getter
 @Builder
-public record Country(Long id, String name) {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Country {
+    private Long id;
+    private String name;
 }

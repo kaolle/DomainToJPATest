@@ -25,8 +25,8 @@ class ContinentRepositoryImpl implements ContinentRepository {
 
     @Override
     public Continent save(Continent continent) {
-        ContinentEntity entity = jpaRepository.findById(continent.id())
-                .orElseThrow(() -> new EntityNotFoundException("Continent not found: " + continent.id()));
+        ContinentEntity entity = jpaRepository.findById(continent.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Continent not found: " + continent.getId()));
 
         mapper.updateEntity(entity, continent);
 

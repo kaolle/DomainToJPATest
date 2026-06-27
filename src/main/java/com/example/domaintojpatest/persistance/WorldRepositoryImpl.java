@@ -25,10 +25,10 @@ class WorldRepositoryImpl implements WorldRepository {
     @Override
     @Transactional
     public World save(World world) {
-        if (world.id() == null) {
+        if (world.getId() == null) {
             return mapper.toDomain(jpaRepository.save(mapper.toEntity(world)));
         }
-        WorldEntity entity = jpaRepository.findById(world.id()).orElseThrow();
+        WorldEntity entity = jpaRepository.findById(world.getId()).orElseThrow();
         mapper.updateEntity(entity, world);
         return mapper.toDomain(jpaRepository.save(entity));
     }
