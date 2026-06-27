@@ -39,13 +39,13 @@ public class WorldMapper {
                 ContinentEntity ce = new ContinentEntity();
                 ce.setName(c.getName());
                 ce.setWorld(entity);
-                addNewCountries(ce, c.getCountries());
+                updateEntity(ce, c);
                 entity.getContinents().add(ce);
             } else {
                 entity.getContinents().stream()
                         .filter(ce -> ce.getId().equals(c.getId()))
                         .findFirst()
-                        .ifPresent(ce -> updateContinentInPlace(ce, c));
+                        .ifPresent(ce -> updateEntity(ce, c));
             }
         });
     }
@@ -66,22 +66,6 @@ public class WorldMapper {
                 .map(c -> Country.builder().id(c.getId()).name(c.getName()).build())
                 .toList();
         return Continent.builder().id(entity.getId()).name(entity.getName()).countries(countries).build();
-    }
-
-    private void updateContinentInPlace(ContinentEntity entity, Continent continent) {
-        entity.setName(continent.getName());
-        entity.getCountries().removeIf(ce ->
-                continent.getCountries().stream().noneMatch(c -> ce.getId().equals(c.getId())));
-        addNewCountries(entity, continent.getCountries().stream().filter(c -> c.getId() == null).toList());
-    }
-
-    private void addNewCountries(ContinentEntity entity, List<Country> countries) {
-        countries.forEach(c -> {
-            CountryEntity ce = new CountryEntity();
-            ce.setName(c.getName());
-            ce.setContinent(entity);
-            entity.getCountries().add(ce);
-        });
     }
 
     private ContinentEntity toContinentEntity(Continent continent, WorldEntity worldEntity) {
