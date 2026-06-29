@@ -13,5 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class World {
     private Long id;
+    private String nomre;
     private List<Continent> continents;
 }

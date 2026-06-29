@@ -21,6 +21,8 @@ public class WorldEntity {
     @Setter(AccessLevel.NONE)
     private Long id;
 
+    private String name;
+
     @OneToMany(mappedBy = "world", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ContinentEntity> continents = new ArrayList<>();
 }
